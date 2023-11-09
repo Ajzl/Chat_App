@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -9,15 +10,20 @@ class Login_Screen extends StatefulWidget {
 }
 
 class _Login_ScreenState extends State<Login_Screen> {
+  var _firebase = FirebaseMessaging.instance;
   TextEditingController username = TextEditingController();
   TextEditingController pswrd = TextEditingController();
 @override
   void initState() {
     // TODO: implement initState
+  init();
     super.initState();
   }
 
-
+  init()async{
+    var token=await _firebase.getToken();
+    print("token : $token");
+  }
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
