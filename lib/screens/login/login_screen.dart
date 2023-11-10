@@ -401,10 +401,14 @@ class _Login_ScreenState extends State<Login_Screen> {
                                                         email: email.text,
                                                         password:
                                                             password.text);
-                                                Navigator.of(context).push(
-                                                    MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            const Home_Screen()));
+                                                Navigator.of(context)
+                                                    .pushAndRemoveUntil(
+                                                        MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                const Home_Screen()),
+                                                        (Route<dynamic>
+                                                                route) =>
+                                                            false);
                                               } catch (e) {
                                                 ScaffoldMessenger.of(context)
                                                     .showSnackBar(SnackBar(
@@ -590,10 +594,14 @@ class _Login_ScreenState extends State<Login_Screen> {
                                                     .signInWithEmailAndPassword(
                                                         email: username.text,
                                                         password: pswrd.text);
-                                                Navigator.of(context).push(
-                                                    MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            const Home_Screen()));
+                                                Navigator.of(context)
+                                                    .pushAndRemoveUntil(
+                                                        MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                const Home_Screen()),
+                                                        (Route<dynamic>
+                                                                route) =>
+                                                            false);
                                               } catch (e) {
                                                 if (e
                                                     .toString()
