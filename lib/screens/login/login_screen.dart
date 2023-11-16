@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../home_screen/home_screen.dart';
 
@@ -14,8 +15,6 @@ class Login_Screen extends StatefulWidget {
   State<Login_Screen> createState() => _Login_ScreenState();
 }
 
-bool isSignUp = false;
-
 class _Login_ScreenState extends State<Login_Screen> {
   var _firebase = FirebaseMessaging.instance;
   TextEditingController username = TextEditingController();
@@ -25,6 +24,7 @@ class _Login_ScreenState extends State<Login_Screen> {
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
   TextEditingController confpassword = TextEditingController();
+  SharedPreferences? prefs;
 
   final _formKey = GlobalKey<FormState>();
   final _signUpFormKey = GlobalKey<FormState>();
@@ -39,6 +39,7 @@ class _Login_ScreenState extends State<Login_Screen> {
   init() async {
     var token = await _firebase.getToken();
     print("token : $token");
+    prefs = await SharedPreferences.getInstance();
   }
 
   @override
@@ -46,6 +47,7 @@ class _Login_ScreenState extends State<Login_Screen> {
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
     final loginProvider = Provider.of<Login_Provider>(context);
+
     return Scaffold(
       // backgroundColor: Colors.blueGrey,
       body: SingleChildScrollView(
@@ -85,7 +87,10 @@ class _Login_ScreenState extends State<Login_Screen> {
               ),
             ),
             loginProvider.isSignUp
-                ? Center(
+                ?
+
+                ///Signup Screen Begins
+                Center(
                     child: Form(
                       key: _signUpFormKey,
                       child: Container(
@@ -210,7 +215,7 @@ class _Login_ScreenState extends State<Login_Screen> {
                                 height: height * .02,
                               ),
                               Container(
-                                height: 62,
+                                height: 65,
                                 child: Card(
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10)),
@@ -262,7 +267,7 @@ class _Login_ScreenState extends State<Login_Screen> {
                                 height: height * .02,
                               ),
                               Container(
-                                height: 60,
+                                height: 65,
                                 child: Card(
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10)),
@@ -312,7 +317,7 @@ class _Login_ScreenState extends State<Login_Screen> {
                                 height: height * .02,
                               ),
                               Container(
-                                height: 60,
+                                height: 65,
                                 child: Card(
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10)),
@@ -392,15 +397,18 @@ class _Login_ScreenState extends State<Login_Screen> {
                                                           BorderRadius.circular(
                                                               14)))),
                                           onPressed: () async {
-                                            // final SharedPreferences prefs = await SharedPreferences.getInstance();
                                             if (_signUpFormKey.currentState!
                                                 .validate())
                                               try {
-                                                FirebaseAuth.instance
+                                                loginProvider.toggleLoading();
+                                                await FirebaseAuth.instance
                                                     .createUserWithEmailAndPassword(
                                                         email: email.text,
                                                         password:
                                                             password.text);
+                                                loginProvider.toggleLoading();
+                                                prefs?.setBool(
+                                                    "LoggedIn", true);
                                                 Navigator.of(context)
                                                     .pushAndRemoveUntil(
                                                         MaterialPageRoute(
@@ -410,9 +418,19 @@ class _Login_ScreenState extends State<Login_Screen> {
                                                                 route) =>
                                                             false);
                                               } catch (e) {
+                                                loginProvider.toggleLoading();
+                                                int start =
+                                                    e.toString().indexOf("[");
+                                                int end =
+                                                    e.toString().indexOf("]");
+                                                String error = e
+                                                    .toString()
+                                                    .replaceRange(
+                                                        start, end + 1, "");
                                                 ScaffoldMessenger.of(context)
                                                     .showSnackBar(SnackBar(
-                                                        content: Text("$e")));
+                                                        content:
+                                                            Text("$error")));
                                               }
                                           },
                                           child: const Text(
@@ -430,7 +448,10 @@ class _Login_ScreenState extends State<Login_Screen> {
                       ),
                     ),
                   )
-                : Center(
+                :
+
+                ///Login Screen Begins
+                Center(
                     child: Form(
                       key: _formKey,
                       child: Container(
@@ -586,14 +607,17 @@ class _Login_ScreenState extends State<Login_Screen> {
                                                           BorderRadius.circular(
                                                               14)))),
                                           onPressed: () async {
-                                            // final SharedPreferences prefs = await SharedPreferences.getInstance();
                                             if (_formKey.currentState!
                                                 .validate())
                                               try {
+                                                loginProvider.toggleLoading();
                                                 await FirebaseAuth.instance
                                                     .signInWithEmailAndPassword(
                                                         email: username.text,
                                                         password: pswrd.text);
+                                                loginProvider.toggleLoading();
+                                                prefs?.setBool(
+                                                    "LoggedIn", true);
                                                 Navigator.of(context)
                                                     .pushAndRemoveUntil(
                                                         MaterialPageRoute(
@@ -603,13 +627,14 @@ class _Login_ScreenState extends State<Login_Screen> {
                                                                 route) =>
                                                             false);
                                               } catch (e) {
+                                                loginProvider.toggleLoading();
                                                 if (e
                                                     .toString()
                                                     .contains("INVALID_LOGIN"))
                                                   ScaffoldMessenger.of(context)
                                                       .showSnackBar(SnackBar(
                                                     content: Text(
-                                                        "User Doesnot Exist"),
+                                                        "Invalid Login Credentials"),
                                                     behavior: SnackBarBehavior
                                                         .floating,
                                                   ));
@@ -649,8 +674,7 @@ class _Login_ScreenState extends State<Login_Screen> {
                     ),
                     TextButton(
                       onPressed: () {
-                        Provider.of<Login_Provider>(context, listen: false)
-                            .loginSwitch();
+                        loginProvider.loginSwitch();
                       },
                       child: Text(
                         loginProvider.isSignUp ? "Login" : "SignUp",
@@ -663,7 +687,13 @@ class _Login_ScreenState extends State<Login_Screen> {
                       ),
                     )
                   ],
-                ))
+                )),
+            loginProvider.isLoading
+                ? Container(
+                    height: height,
+                    color: Colors.black45,
+                    child: Center(child: CircularProgressIndicator()))
+                : Container()
           ]),
         ),
       ),
